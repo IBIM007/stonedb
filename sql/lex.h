@@ -190,6 +190,7 @@ static const SYMBOL symbols[] = {
   { SYM("DEFINER",                  DEFINER_SYM)},
   { SYM("DELAYED",                  DELAYED_SYM)},
   { SYM("DELAY_KEY_WRITE",          DELAY_KEY_WRITE_SYM)},
+  { SYM("DELTA",                    DELTA_SYM)},
   { SYM("DESC",                     DESC)},
   { SYM("DESCRIBE",                 DESCRIBE)},
   { SYM("DES_KEY_FILE",             DES_KEY_FILE)},

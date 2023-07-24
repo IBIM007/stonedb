@@ -624,6 +624,7 @@ bool my_yyoverflow(short **a, YYSTYPE **b, YYLTYPE **c, ulong *yystacksize);
 %token  DISK_SYM
 %token  DISTINCT                      /* SQL-2003-R */
 %token  DIV_SYM
+%token  DELTA_SYM 
 %token  DOUBLE_SYM                    /* SQL-2003-R */
 %token  DO_SYM
 %token  DROP                          /* SQL-2003-R */
@@ -1176,7 +1177,7 @@ bool my_yyoverflow(short **a, YYSTYPE **b, YYLTYPE **c, ulong *yystacksize);
         NCHAR_STRING opt_component key_cache_name
         sp_opt_label BIN_NUM label_ident TEXT_STRING_filesystem ident_or_empty
         opt_constraint constraint opt_ident TEXT_STRING_sys_nonewline
-        filter_wild_db_table_string
+        filter_wild_db_table_string tianmu_ident tianmu_first_ident tianmu_ident_or_empty
 
 %type <lex_str_ptr>
         opt_table_alias
@@ -7891,6 +7892,41 @@ ident_or_empty:
         | ident { $$= $1; }
         ;
 
+tianmu_ident_or_empty:
+          STATUS_SYM { 
+            LEX *lex= Lex;
+            size_t dummy;
+            lex->select_lex->db=NULL;
+            if (lex->copy_db_to(&lex->select_lex->db, &dummy))
+            { 
+              MYSQL_YYABORT;
+            }
+            $$.str= 0; 
+            $$.length= 0; 
+            lex->wild=NULL;
+          }
+        | ALL DATABASES STATUS_SYM
+        {
+          LEX *lex= Lex;
+          lex->select_lex->db=NULL;
+          $$.str=0;
+          $$.length=0;
+          lex->wild=NULL;
+        }
+        | ident STATUS_SYM{ 
+          LEX *lex= Lex;
+          lex->select_lex->db=NULL;
+          size_t dummy;
+          if (lex->copy_db_to(&lex->select_lex->db, &dummy))
+          { 
+            MYSQL_YYABORT;
+          }
+          $$= $1; 
+          Lex->wild= new (YYTHD->mem_root) String($1.str, $1.length,system_charset_info);
+          if (Lex->wild == NULL)MYSQL_YYABORT;
+        }
+        ;
+
 alter_commands:
           alter_command_list
         | alter_command_list partitioning
@@ -11904,6 +11940,11 @@ show_param:
              if (prepare_schema_table(YYTHD, lex, 0, SCH_TABLES))
                MYSQL_YYABORT;
            }
+          |  tianmu_first_ident DELTA_SYM tianmu_ident_or_empty 
+           {
+             LEX *lex= Lex;
+             lex->sql_command= SQLCOM_SHOW_TIANMU_DELTA_STATUS;
+           }
         | OPEN_SYM TABLES opt_db opt_wild_or_where
           {
             LEX *lex= Lex;
@@ -12226,6 +12267,18 @@ show_engine_param:
         | LOGS_SYM
           { Lex->sql_command= SQLCOM_SHOW_ENGINE_LOGS; }
         ;
+
+tianmu_first_ident:
+          tianmu_ident    { 
+            char str1[]="tianmu";
+            $$=$1; 
+            if (strcasecmp(str1, $1.str) != 0)
+            {
+              my_error(ER_TIANMU_BADWORD, MYF(0), $1.str);
+              MYSQL_YYABORT;
+            }
+          }
+        ;  
 
 master_or_binary:
           MASTER_SYM
@@ -13266,6 +13319,10 @@ ident:
               MYSQL_YYABORT;
             $$.length= $1.length;
           }
+        ;
+        
+tianmu_ident:
+          IDENT_sys    { $$=$1; }
         ;
 
 label_ident:
