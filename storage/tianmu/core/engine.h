@@ -144,7 +144,7 @@ class Engine final {
   TaskExecutor *GetTaskExecutor() const { return task_executor.get(); }
   void AddTableDelta(TABLE *form, std::shared_ptr<TableShare> share);
   void UnregisterDeltaTable(const std::string &from, const std::string &to);
-
+  bool GetDeltaSyncStatus(THD *thd);
  public:
   utils::thread_pool bg_load_thread_pool;
   utils::thread_pool load_thread_pool;

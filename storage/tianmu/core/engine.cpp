@@ -2388,6 +2388,88 @@ void Engine::UnregisterDeltaTable(const std::string &from, const std::string &to
   }
 }
 
+bool Engine::GetDeltaSyncStatus(THD *thd)
+{
+  std::scoped_lock guard(mem_table_mutex);
+  Protocol *protocol= thd->get_protocol();
+    
+  List<Item> field_list;
+  if(field_list.push_back(new Item_empty_string("table name",130)))return false;
+  if(field_list.push_back(new Item_return_int("delta table id",8,MYSQL_TYPE_LONGLONG)))return false;
+  if(field_list.push_back(new Item_empty_string("delta_size",20)))return false;
+  if(field_list.push_back(new Item_empty_string("current load id",20)))return false;
+  if(field_list.push_back(new Item_empty_string("merge id",20)))return false;
+  if(field_list.push_back(new Item_empty_string("current row_id",20)))return false;
+
+  if (thd->send_result_metadata(&field_list,Protocol::SEND_NUM_ROWS|Protocol::SEND_EOF))return false;
+  std::string mix,db,table;
+  bool completeFind=false;
+    
+  if(thd->lex->select_lex->db&&thd->lex->wild)
+  {
+    db=thd->lex->select_lex->db;
+    table=thd->lex->wild->ptr();
+    mix=db+'.'+table;
+    completeFind=true;
+  }
+  else if(thd->lex->select_lex->db==NULL&&thd->lex->wild==NULL)
+  {
+    mix="";
+  }
+  else if(thd->lex->select_lex->db&&thd->lex->wild==NULL)
+  {
+    db=thd->lex->select_lex->db;
+    mix=db+'.';
+  }
+  else
+  {
+    return false;
+  }
+ 
+  std::string::size_type idx;
+  
+  int notEarlierOut=1;
+  for (auto &delta : m_table_deltas) 
+  {
+    
+    if(!completeFind)
+    {
+      idx=delta.second->FullName().find(mix);
+      if(idx==std::string::npos)continue;
+    }
+    else{
+      if(notEarlierOut=delta.second->FullName().compare(mix))continue;
+    } 
+      
+    protocol->start_row();
+  
+    if(protocol->store(delta.second->FullName().c_str(),system_charset_info))return false;
+    if(protocol->store((longlong)delta.second->GetDeltaTableID()))return false;
+      
+    std::string size=std::to_string((unsigned long long)(delta.second->load_id.load()-delta.second->merge_id.load()));
+    if(protocol->store(size.c_str(),system_charset_info))return false;
+      
+    std::string load=std::to_string((unsigned long long)delta.second->load_id.load());
+    if(protocol->store(load.c_str(),system_charset_info))return false;
+
+    std::string merge=std::to_string((unsigned long long)delta.second->merge_id.load());
+    if(protocol->store(merge.c_str(),system_charset_info))return false;
+
+    std::string row=std::to_string((unsigned long long)delta.second->row_id.load());
+    if(protocol->store(row.c_str(),system_charset_info))return false;
+    
+    if(protocol->end_row())return false;//这里又是0才是失败了,并不是，还是1才是失败
+   
+    if(notEarlierOut==0)
+    {
+      break;
+    }
+  }
+  
+  my_eof(thd);
+  return true;
+}
+
 void Engine::ResetTaskExecutor(int percent) {
   if (percent > 0) {
     if (task_executor) {
