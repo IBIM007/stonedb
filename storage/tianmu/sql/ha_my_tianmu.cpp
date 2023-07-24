@@ -173,5 +173,10 @@ bool ha_my_tianmu_load(THD *thd, sql_exchange *ex, TABLE_LIST *table_list, void 
   return false;
 }
 
+bool ha_my_tianmu_delta_sync_status(THD *thd){
+  core::Engine *eng = reinterpret_cast<core::Engine *>(tianmu_hton->data);
+  return eng->GetDeltaSyncStatus(thd);
+}
+
 }  // namespace DBHandler
 }  // namespace Tianmu

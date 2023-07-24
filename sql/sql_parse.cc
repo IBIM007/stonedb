@@ -2814,6 +2814,14 @@ mysql_execute_command(THD *thd, bool first_level)
     mysql_mutex_unlock(&LOCK_status);
     break;
   }
+  case SQLCOM_SHOW_TIANMU_DELTA_STATUS:
+  {
+    if(!get_tianmu_delta_sync_status(thd))
+    {
+      sql_print_error("An error occurred when returning to the client");
+    }
+    break;
+  }
   case SQLCOM_SHOW_EVENTS:
 #ifdef EMBEDDED_LIBRARY
     my_error(ER_NOT_SUPPORTED_YET, MYF(0), "embedded server");

@@ -39,6 +39,7 @@ bool ha_my_tianmu_set_statement_allowed(THD *thd, LEX *lex);
 // processing the load operation.
 bool ha_my_tianmu_load(THD *thd, sql_exchange *ex, TABLE_LIST *table_list, void *arg);
 
+bool ha_my_tianmu_delta_sync_status(THD *thd);
 }  // namespace DBHandler
 }  //  namespace Tianmu
 #endif  // TIANMU_HANDLER_HA_RCENGINE_H_

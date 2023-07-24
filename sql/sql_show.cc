@@ -9582,3 +9582,8 @@ static void get_cs_converted_string_value(THD *thd,
   }
   return;
 }
+
+bool get_tianmu_delta_sync_status(THD *thd)
+{
+  return Tianmu::DBHandler::ha_my_tianmu_delta_sync_status(thd);
+}

@@ -263,5 +263,5 @@ bool ignore_db_dirs_process_additions();
 bool push_ignored_db_dir(char *path);
 extern char *opt_ignore_db_dirs;
 bool is_in_ignore_db_dirs_list(const char *directory);
-
+bool get_tianmu_delta_sync_status(THD *thd);
 #endif /* SQL_SHOW_H */
