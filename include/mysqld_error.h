@@ -1139,5 +1139,5 @@ static const int errmsg_section_size[] = { 889, 244 };
 #define ER_TIANMU_NOT_SUPPORTED_FOREIGN_KEY 3241
 #define ER_TIANMU_NOT_SUPPORTED_PARTITION 3242
 #define ER_TIANMU_NOT_FOUND_INDEX 3243
-
+#define ER_TIANMU_BADWORD 3244
 #endif

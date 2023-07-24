@@ -7826,6 +7826,8 @@ ER_TIANMU_NOT_SUPPORTED_PARTITION
 ER_TIANMU_NOT_FOUND_INDEX
   eng "Tianmu engine does not find the index."
 
+ER_TIANMU_BADWORD
+  eng "right word is tianmu(Case-insensitive)，your word has a mistake: '%s'"
 #
 #  End of 5.7 error messages.
 #
